@@ -1,7 +1,8 @@
-clc; close all; clear variables
-set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');set(groot,'defaulttextinterpreter','latex');  
+clc; close all; clear all
 %% *DYNAMICS AND CONTROL OF VEHICLES AND ROBOTS*
 %% Example: Rolling radius estimation
+% 
+% 
 % *University of Trento*
 % 
 % _A.Y. 2019/2020_
@@ -90,12 +91,12 @@ yyaxis left
 plot(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.omega_FL,'DisplayName','$\omega_{FL}$')
 hold on
 plot(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.omega_FR,'DisplayName','$\omega_{FR}$')
-xlabel('time (s)');ylabel('omega $rad/s$');
+xlabel('time (s)');ylabel('omega (rad/s)');
 title('Front Wheel velocities');
 
 yyaxis right
 plot(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.long_vel,'DisplayName','long vel')
-xlabel('time (s)');ylabel('u $m/s$');
+xlabel('time (s)');ylabel('u (m/s)');
 legend
 %% 
 % The kinematic relationship between the longitudinal velocity and the wheel 
@@ -106,3 +107,4 @@ fit_R = fit(mean([STRAIGHT_LINE_0.omega_FL,STRAIGHT_LINE_0.omega_FR],2),STRAIGHT
 
 fprintf(' The estimated rolling radius is: %6.3f\n', fit_R)
 fprintf(' The wheel radius given is: %6.3f\n', vehicle.R)
+

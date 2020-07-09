@@ -1,18 +1,8 @@
-clc; close all; clear all
+clc; close all; clear variables
+set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');set(groot,'defaulttextinterpreter','latex');
 %% *DYNAMICS AND CONTROL OF VEHICLES AND ROBOTS*
-%% Example: Rolling radius estimation
-% 
-% 
-%
-%% Intro
-% In this script the telemetry data from the P1 experimental vehicles are loaded. 
-% This Matlab Live Script can be used as the structure for your project script. 
-% 
-% Click "Save as..." and save this script as .m in order to obtain a classic 
-% Matlab script.
+%% Rolling Resistance Estimation
 %% Load Vehicle Parameters
-% The script loads the vehicle main parameters in the |vehicle| struct. See 
-% the script |p1_parameters.m| for comments about parameters names and units.
 
 p1_parameters
 %% Load Datasets
@@ -43,7 +33,6 @@ p1_parameters
 load("Dataset/STRAIGHT_LINE_0.mat");
 load("Dataset/STRAIGHT_LINE_1.mat");
 load("Dataset/STRAIGHT_LINE_2.mat");
-
 %% 
 % The loaded variable is a struct cointaing the following telemetry signals:
 
@@ -76,8 +65,6 @@ load("Dataset/STRAIGHT_LINE_2.mat");
 % delta_L		rad		steering angle of the front left wheel
 % delta_R		rad		steering angle of the front right wheel
 % delta_HW 		rad		handwheel steering angle
-
-
 %% Rolling resistance estimation
 
 Ts = STRAIGHT_LINE_0.time(2) - STRAIGHT_LINE_0.time(1);
@@ -88,7 +75,10 @@ m = 1724 ;
 
 mF = Lr/(Lf+Lr) * m;
 
-%Check acceleration
+%% 
+% In order to estimate the rolling resistance, we need to extract from data 
+% the regions with approximately zero longitudinal acceleration: so the for
+
 figure
 subplot(2,1,1)
 plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.axG,500),'DisplayName','$\axG$')
@@ -104,8 +94,8 @@ title('Front Wheels Longitudinal Forces-STRAIGHT_LINE_0');
 legend
 
 
-Cr_fl = mean(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fx_FL,Fs))/(mF * 9.81/2);
-Cr_fr = mean(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fx_FR,Fs))/(mF * 9.81/2);
+Cr_fl = mean(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fx_FL,500))/(mF * 9.81/2);
+Cr_fr = mean(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fx_FR,500))/(mF * 9.81/2);
 
 ft = fittype('Cr*x'); 
 fit_Cr_FL = fit(mean(STRAIGHT_LINE_0.Fz_FL),mean(STRAIGHT_LINE_0.Fx_FL),ft,'StartPoint', 0);
@@ -135,7 +125,7 @@ legend
 figure
 subplot(2,1,1)
 plot(smooth(STRAIGHT_LINE_2.time,STRAIGHT_LINE_2.axG,500),'DisplayName','$\axG$')
-xlabel('time (s)');ylabel('Ax acceleration ');
+xlabel('time (s)');ylabel('axG $m/s^2$ ');
 title('Vehicle Acceleration-STRAIGHT_LINE_2');
 %Longitudinal forces, straight line at constant velocity
 subplot(2,1,2)

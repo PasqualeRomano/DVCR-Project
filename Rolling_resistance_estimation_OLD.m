@@ -1,5 +1,9 @@
-clc; close all; clear variables
+clc; close all; clear all
 %% *DYNAMICS AND CONTROL OF VEHICLES AND ROBOTS*
+%% Example: Rolling radius estimation
+% 
+% 
+%
 %% Intro
 % In this script the telemetry data from the P1 experimental vehicles are loaded. 
 % This Matlab Live Script can be used as the structure for your project script. 
@@ -35,7 +39,12 @@ p1_parameters
 % STRAIGHT_LINE_2 Straight line in the opposite direction
 % 
 % STEP_STEER Step steer
-% 
+
+load("Dataset/STRAIGHT_LINE_0.mat");
+load("Dataset/STRAIGHT_LINE_1.mat");
+load("Dataset/STRAIGHT_LINE_2.mat");
+
+%% 
 % The loaded variable is a struct cointaing the following telemetry signals:
 
 % DATA			UNITS		DESCRIPTION
@@ -67,89 +76,84 @@ p1_parameters
 % delta_L		rad		steering angle of the front left wheel
 % delta_R		rad		steering angle of the front right wheel
 % delta_HW 		rad		handwheel steering angle
-%% Longitudinal Practical Slip
 
-load("Dataset/STRAIGHT_LINE_0.mat");
-load("Dataset/STRAIGHT_LINE_1.mat");
-load("Dataset/STRAIGHT_LINE_2.mat");
 
-close all
-load("roll_rad.mat","R_dyn")
-ft = fittype('Kx*x'); 
-fit_kx_FL_1 = fit(abs(mean([STRAIGHT_LINE_1.long_vel])),mean(STRAIGHT_LINE_1.long_vel-STRAIGHT_LINE_1.omega_FL*R_dyn),ft,'StartPoint',0);
-kx_FL_1 = fit_kx_FL_1.Kx;
-fit_kx_FR_1 = fit(abs(mean([STRAIGHT_LINE_1.long_vel])),mean(STRAIGHT_LINE_1.long_vel-STRAIGHT_LINE_1.omega_FR*R_dyn),ft,'StartPoint',0);
-kx_FR_1 = fit_kx_FR_1.Kx;
+%% Rolling resistance estimation
 
-ft = fittype('Kx*x'); 
-fit_kx_FL_2 = fit(abs(mean([STRAIGHT_LINE_2.long_vel])),mean(STRAIGHT_LINE_2.long_vel-STRAIGHT_LINE_2.omega_FL*R_dyn),ft,'StartPoint',0);
-kx_FL_2 = fit_kx_FL_2.Kx;
-fit_kx_FR_2 = fit(abs(mean([STRAIGHT_LINE_2.long_vel])),mean(STRAIGHT_LINE_2.long_vel-STRAIGHT_LINE_2.omega_FR*R_dyn),ft,'StartPoint',0);
-kx_FR_2 = fit_kx_FR_2.Kx;
+Ts = STRAIGHT_LINE_0.time(2) - STRAIGHT_LINE_0.time(1);
+Fs = 1/Ts;
+Lr = 1.15;
+Lf = 1.35;
+m = 1724 ;
 
+mF = Lr/(Lf+Lr) * m;
+
+%Check acceleration
 figure
-subplot(3,2,1)
+subplot(2,1,1)
+plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.axG,500),'DisplayName','$\axG$')
+xlabel('time (s)');ylabel('Ax acceleration ');
+title('Vehicle Acceleration-STRAIGHT_LINE_0');
+%Longitudinal forces, straight line at constant velocity
+subplot(2,1,2)
 plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fx_FL,500),'DisplayName','$\Fx_{FL}$')
 hold on
 plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fx_FR,500),'DisplayName','$\Fx_{FR}$')
 xlabel('time (s)');ylabel('N');
-title('Front Wheels Longitudinal Forces');
+title('Front Wheels Longitudinal Forces-STRAIGHT_LINE_0');
 legend
 
-subplot(3,2,2)
-plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fz_FL,500),'DisplayName','$\Fz_{FL}$')
-hold on
-plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fz_FR,500),'DisplayName','$\Fz_{FR}$')
-xlabel('time (s)');ylabel('Fz (N)');
-title('Front Vertical Forces');
-legend
 
-subplot(3,2,3)
-plot(smooth(STRAIGHT_LINE_1.time,STRAIGHT_LINE_1.Fx_FL,500),'DisplayName','$\Fx_{FL}$')
+Cr_fl = mean(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fx_FL,Fs))/(mF * 9.81/2);
+Cr_fr = mean(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fx_FR,Fs))/(mF * 9.81/2);
+
+ft = fittype('Cr*x'); 
+fit_Cr_FL = fit(mean(STRAIGHT_LINE_0.Fz_FL),mean(STRAIGHT_LINE_0.Fx_FL),ft,'StartPoint', 0);
+fit_Cr_FR = fit(mean(STRAIGHT_LINE_0.Fz_FR),mean(STRAIGHT_LINE_0.Fx_FR),ft,'StartPoint', 0);
+Cr_FL = fit_Cr_FL.Cr;
+Cr_FR = fit_Cr_FR.Cr;
+
+%Lateral forces, straight line at constant velocity
+figure
+plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fy_FL,Fs),'DisplayName','$\Fx_{FL}$')
 hold on
-plot(smooth(STRAIGHT_LINE_1.time,STRAIGHT_LINE_1.Fx_FR,500),'DisplayName','$\Fx_{FR}$')
+plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fy_FR,Fs),'DisplayName','$\Fx_{FR}$')
 xlabel('time (s)');ylabel('N');
-title('Front Wheels Longitudinal Forces');
+title('Front Wheels Lateral Forces');
 legend
 
-subplot(3,2,4)
-plot(smooth(STRAIGHT_LINE_1.time,STRAIGHT_LINE_1.Fz_FL,500),'DisplayName','$\Fz_{FL}$')
+figure
+plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fz_FL,500),'DisplayName','$Fz_{FL}$')
 hold on
-plot(smooth(STRAIGHT_LINE_1.time,STRAIGHT_LINE_1.Fz_FR,500),'DisplayName','$\Fz_{FR}$')
+plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.Fz_FR,500),'DisplayName','$Fz_{FR}$')
 xlabel('time (s)');ylabel('Fz (N)');
 title('Front Vertical Forces');
 legend
-subplot(3,2,5)
+
+%Estimation using STRAIGHT_LINE_2
+%Check acceleration
+figure
+subplot(2,1,1)
+plot(smooth(STRAIGHT_LINE_2.time,STRAIGHT_LINE_2.axG,500),'DisplayName','$\axG$')
+xlabel('time (s)');ylabel('Ax acceleration ');
+title('Vehicle Acceleration-STRAIGHT_LINE_2');
+%Longitudinal forces, straight line at constant velocity
+subplot(2,1,2)
 plot(smooth(STRAIGHT_LINE_2.time,STRAIGHT_LINE_2.Fx_FL,500),'DisplayName','$\Fx_{FL}$')
 hold on
 plot(smooth(STRAIGHT_LINE_2.time,STRAIGHT_LINE_2.Fx_FR,500),'DisplayName','$\Fx_{FR}$')
 xlabel('time (s)');ylabel('N');
-title('Front Wheels Longitudinal Forces');
+title('Front Wheels Longitudinal Forces--STRAIGHT_LINE_2');
 legend
-subplot(3,2,6)
-plot(smooth(STRAIGHT_LINE_2.time,STRAIGHT_LINE_2.Fz_FL,500),'DisplayName','$\Fz_{FL}$')
-hold on
-plot(smooth(STRAIGHT_LINE_2.time,STRAIGHT_LINE_2.Fz_FR,500),'DisplayName','$\Fz_{FR}$')
-xlabel('time (s)');ylabel('Fz (N)');
-title('Front Vertical Forces');
-legend
+%Cr_fl_2 = mean(smooth(STRAIGHT_LINE_2.time,STRAIGHT_LINE_2.Fx_FL,Fs))/(mF * 9.81/2);
+%Cr_fr_2 = mean(smooth(STRAIGHT_LINE_2.time,STRAIGHT_LINE_2.Fx_FR,Fs))/(mF * 9.81/2);
 
-%Check accelerations
-figure
-subplot(3,1,1)
-plot(smooth(STRAIGHT_LINE_0.time,STRAIGHT_LINE_0.axG,500),'DisplayName','$\axG$')
-xlabel('time (s)');ylabel('$m/s^{2}$');
-title('Acceleration-0');
-legend
+ft = fittype('Cr*x'); 
+fit_Cr_FL_2 = fit(mean(STRAIGHT_LINE_2.Fz_FL),mean(STRAIGHT_LINE_2.Fx_FL),ft,'StartPoint', 0);
+fit_Cr_FR_2 = fit(mean(STRAIGHT_LINE_2.Fz_FR),mean(STRAIGHT_LINE_2.Fx_FR),ft,'StartPoint', 0);
+Cr_FL_2= fit_Cr_FL_2.Cr;
+Cr_FR_2 = fit_Cr_FR_2.Cr;
 
-subplot(3,1,2)
-plot(smooth(STRAIGHT_LINE_1.time,STRAIGHT_LINE_1.axG,500),'DisplayName','$\axG$')
-xlabel('time (s)');ylabel('$m/s^{2}$');
-title('Acceleration-1');
-legend
 
-subplot(3,1,3)
-plot(smooth(STRAIGHT_LINE_2.time,STRAIGHT_LINE_2.axG,500),'DisplayName','$\axG$')
-xlabel('time (s)');ylabel('$m/s^2$');
-title('Acceleration-2');
-legend
+%TO DO
+%Add theory: choices, live script
