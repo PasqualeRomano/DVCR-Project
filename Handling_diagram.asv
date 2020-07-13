@@ -282,6 +282,6 @@ xlabel('delta');ylabel('beta');
 title('SP_100FT_CR_IS_CW');
 legend
 
-%steering of beta gradient wrt delta
-K_beta_delta_CCW = beta_delta_CCW.p1
-K_beta_delta_CW = beta_delta_CW.p1
+%steering of beta gradient wrt ay
+K_beta_ay_RSL = beta_ay_RSL.p1
+K_beta_ay_RSR = beta_ay_RSR.p1

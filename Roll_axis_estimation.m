@@ -70,38 +70,96 @@ p1_parameters
 % delta_HW 		rad		handwheel steering angle
 %% Height of roll axis estimation
 
-load("Dataset/STRAIGHT_LINE_0.mat")
+load("Dataset/STRAIGHT_LINE_0.mat");
 load("Dataset/STRAIGHT_LINE_1.mat");
 load("Dataset/RAMP_STEER_L.mat");
 load("Dataset/RAMP_STEER_R.mat");
 load("Dataset/SP_100FT_CR_IS_CCW.mat");
 load("Dataset/SP_100FT_CR_IS_CW.mat");
 load("roll_rad.mat","R_dyn")
+
+%% Static front load
+Fz_F = vehicle.mass*vehicle.Lr/vehicle.L*9.81;
+%Fzfr - Fzf/2 = DY
+%load transfer ramp steer
+DeltaZF_RSL =  (RAMP_STEER_L.Fz_FR - Fz_F/2 - RAMP_STEER_L.Fz_FL + Fz_F/2)./2;
+DeltaZF_RSR =  (RAMP_STEER_R.Fz_FR - Fz_F/2 - RAMP_STEER_R.Fz_FL + Fz_F/2)./2;
+DeltaZF_CCW =  (SP_100FT_CR_IS_CCW.Fz_FR - Fz_F/2 - SP_100FT_CR_IS_CCW.Fz_FL + Fz_F/2)./2;
+DeltaZF_CW =  (SP_100FT_CR_IS_CW.Fz_FR - Fz_F/2 - SP_100FT_CR_IS_CW.Fz_FL + Fz_F/2)./2;
+%%
 %Check steering angles left-right
 figure
+yyaxis left 
 subplot(2,1,1)
-plot(smooth(RAMP_STEER_L.time,RAMP_STEER_L.roll*180/pi,500),'DisplayName','roll')
-xlabel('time (s)');ylabel('deg');
+plot(RAMP_STEER_L.time,smooth(DeltaZF_RSL,800),'DisplayName','DeltaZF_RSL')
+xlabel('time (s)');ylabel('N');
+legend
 hold on
-plot(smooth(RAMP_STEER_L.time,RAMP_STEER_L.ayG,500),'DisplayName','ayG')
-xlabel('time (s)');ylabel('m,/s^2');
+yyaxis right
+plot(RAMP_STEER_L.time,smooth(RAMP_STEER_L.ayG,800),'DisplayName','ayG')
+xlabel('time (s)');ylabel('m/s^2');
 title('RAMP_STEER_L');
 legend
 
 subplot(2,1,2)
-plot(smooth(RAMP_STEER_R.time,RAMP_STEER_R.roll*180/pi,500),'DisplayName','roll')
+yyaxis left
+plot(RAMP_STEER_R.time,smooth(DeltaZF_RSR,800),'DisplayName','DeltaZF_RSR')
+xlabel('time (s)');ylabel('N');
+legend
 hold on
-plot(smooth(RAMP_STEER_R.time,RAMP_STEER_R.ayG,500),'DisplayName','ayG')
-xlabel('time (s)');ylabel('deg');
+yyaxis right
+plot(RAMP_STEER_R.time,smooth(RAMP_STEER_R.ayG,800),'DisplayName','ayG')
+xlabel('time (s)');ylabel('m/s^2');
 title('RAMP_STEER_R');
 legend
-%%
-%phi = vehicle.m*ayG*1/vehicle.k_roll  *hgs
-ft = fittype('K.*x'); 
 
-fit_kroll_RAMP_STEER_L = fit(smooth(RAMP_STEER_L.ayG,500)*vehicle.mass/vehicle.k_roll,smooth(RAMP_STEER_L.roll,500),ft,'StartPoint',vehicle.h_Gs);
-k_roll_RAMP_L = fit_kroll_RAMP_STEER_L.K;
-fit_kroll_RAMP_STEER_R = fit(smooth(RAMP_STEER_R.ayG,500)*vehicle.mass/vehicle.k_roll,smooth(RAMP_STEER_R.roll,500),ft,'StartPoint',vehicle.h_Gs);
-k_roll_RAMP_R = fit_kroll_RAMP_STEER_R.K;
-%using ccw,cw and extracting constanr acceleration regions
-%TO DO : stiamo hgs usando tratti di CW e CCW be smart
+figure
+subplot(2,1,1)
+yyaxis left
+plot(SP_100FT_CR_IS_CCW.time,smooth(DeltaZF_CCW,800),'DisplayName','DeltaZF_CCW')
+xlabel('time (s)');ylabel('N');
+legend
+hold on
+yyaxis right
+plot(SP_100FT_CR_IS_CCW.time,smooth(SP_100FT_CR_IS_CCW.ayG,800),'DisplayName','ayG')
+xlabel('time (s)');ylabel('m,/s^2');
+title('SP_100FT_CR_IS_CCW');
+legend
+
+subplot(2,1,2)
+yyaxis left
+plot(SP_100FT_CR_IS_CW.time,smooth(DeltaZF_CW,800),'DisplayName','DeltaZF_CW')
+legend
+hold on
+yyaxis right
+plot(SP_100FT_CR_IS_CW.time,smooth(SP_100FT_CR_IS_CW.ayG,800),'DisplayName','ayG')
+xlabel('time (s)');ylabel('m,/s^2');
+title('SP_100FT_CR_IS_CW');
+legend
+%%
+%DFzf = mayG/wr(Lr/L*hr+hgs K/2*K)
+
+ft = fittype( @(hr,x) vehicle.mass*x/vehicle.W.*(vehicle.Lr/vehicle.L*hr+vehicle.h_Gs/2));
+
+fit_kroll_RSL = fit(smooth(RAMP_STEER_L.ayG(50/0.2:90/0.2),500),smooth(DeltaZF_RSL(50/0.2:90/0.2),500),ft,'StartPoint',0);
+h_roll_RSL = fit_kroll_RSL.hr
+
+fit_kroll_RSR = fit(smooth(RAMP_STEER_R.ayG(40/0.2:80/0.2),500),smooth(DeltaZF_RSR(40/0.2:80/0.2),500),ft,'StartPoint',0);
+h_roll_RSR = fit_kroll_RSR.hr
+
+fit_kroll_CCW = fit(smooth(SP_100FT_CR_IS_CCW.ayG(30/0.2:100/0.2),500),smooth(DeltaZF_CCW(30/0.2:100/0.2),500),ft,'StartPoint',0);
+h_roll_CCW = fit_kroll_CCW.hr
+
+fit_kroll_CW = fit(smooth(SP_100FT_CR_IS_CW.ayG(40/0.2:120/0.2),500),smooth(DeltaZF_CW(40/0.2:120/0.2),500),ft,'StartPoint',0);
+h_roll_CW = fit_kroll_CW.hr
+
+h_roll= (h_roll_RSL+h_roll_RSR+h_roll_CCW+h_roll_CW)/4;
+figure
+plot(RAMP_STEER_L.time(50/0.2:90/0.2),vehicle.mass*smooth(RAMP_STEER_L.ayG(50/0.2:90/0.2),500)/vehicle.W.*(vehicle.Lr/vehicle.L*h_roll_RSL+vehicle.h_Gs/2),'DisplayName','DeltaZF_RSL fitted')
+xlabel('time (s)');ylabel('N');
+legend
+hold on
+plot(RAMP_STEER_L.time(50/0.2:90/0.2),smooth(DeltaZF_RSL(50/0.2:90/0.2),500),'DisplayName','DeltaZF_RSL')
+xlabel('time (s)');ylabel('N');
+title('RAMP_STEER_L');
+legend
