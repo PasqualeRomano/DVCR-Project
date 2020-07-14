@@ -141,25 +141,27 @@ legend
 
 ft = fittype( @(hr,x) vehicle.mass*x/vehicle.W.*(vehicle.Lr/vehicle.L*hr+vehicle.h_Gs/2));
 
-fit_kroll_RSL = fit(smooth(RAMP_STEER_L.ayG(50/0.2:90/0.2),500),smooth(DeltaZF_RSL(50/0.2:90/0.2),500),ft,'StartPoint',0);
+fit_kroll_RSL = fit(smooth(RAMP_STEER_L.ayG,500),smooth(DeltaZF_RSL,500),ft,'StartPoint',0);
 h_roll_RSL = fit_kroll_RSL.hr
 
-fit_kroll_RSR = fit(smooth(RAMP_STEER_R.ayG(40/0.2:80/0.2),500),smooth(DeltaZF_RSR(40/0.2:80/0.2),500),ft,'StartPoint',0);
+fit_kroll_RSR = fit(smooth(RAMP_STEER_R.ayG,500),smooth(DeltaZF_RSR,500),ft,'StartPoint',0);
 h_roll_RSR = fit_kroll_RSR.hr
 
-fit_kroll_CCW = fit(smooth(SP_100FT_CR_IS_CCW.ayG(30/0.2:100/0.2),500),smooth(DeltaZF_CCW(30/0.2:100/0.2),500),ft,'StartPoint',0);
+fit_kroll_CCW = fit(smooth(SP_100FT_CR_IS_CCW.ayG,500),smooth(DeltaZF_CCW,500),ft,'StartPoint',0);
 h_roll_CCW = fit_kroll_CCW.hr
 
-fit_kroll_CW = fit(smooth(SP_100FT_CR_IS_CW.ayG(40/0.2:120/0.2),500),smooth(DeltaZF_CW(40/0.2:120/0.2),500),ft,'StartPoint',0);
+fit_kroll_CW = fit(smooth(SP_100FT_CR_IS_CW.ayG,500),smooth(DeltaZF_CW,500),ft,'StartPoint',0);
 h_roll_CW = fit_kroll_CW.hr
 
 h_roll= (h_roll_RSL+h_roll_RSR+h_roll_CCW+h_roll_CW)/4;
 figure
-plot(RAMP_STEER_L.time(50/0.2:90/0.2),vehicle.mass*smooth(RAMP_STEER_L.ayG(50/0.2:90/0.2),500)/vehicle.W.*(vehicle.Lr/vehicle.L*h_roll_RSL+vehicle.h_Gs/2),'DisplayName','DeltaZF_RSL fitted')
+plot(RAMP_STEER_L.time,vehicle.mass*smooth(RAMP_STEER_L.ayG,500)/vehicle.W.*(vehicle.Lr/vehicle.L*h_roll_RSL+vehicle.h_Gs/2),'DisplayName','DeltaZF_RSL fitted')
 xlabel('time (s)');ylabel('N');
 legend
 hold on
-plot(RAMP_STEER_L.time(50/0.2:90/0.2),smooth(DeltaZF_RSL(50/0.2:90/0.2),500),'DisplayName','DeltaZF_RSL')
+plot(RAMP_STEER_L.time,smooth(DeltaZF_RSL,500),'DisplayName','DeltaZF_RSL')
 xlabel('time (s)');ylabel('N');
 title('RAMP_STEER_L');
 legend
+
+save('roll_height','h_roll');
