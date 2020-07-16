@@ -158,8 +158,8 @@ load("steer_ratio.mat","tau_VW_mean");
 
 %rho estimate
 %rho = (dh*tau + alphar-alphaf)1/L
-rho_RSL = RAMP_STEER_L.delta_HW/tau_VW_mean + RAMP_STEER_L.rear_slip_angle-RAMP_STEER_L.front_slip_angle;
-rho_RSR = RAMP_STEER_R.delta_HW/tau_VW_mean + RAMP_STEER_R.rear_slip_angle-RAMP_STEER_R.front_slip_angle;
+rho_RSL = RAMP_STEER_L.delta_HW/tau_VW_mean/vehicle.L + (RAMP_STEER_L.rear_slip_angle-RAMP_STEER_L.front_slip_angle)/vehicle.L;
+rho_RSR = RAMP_STEER_R.delta_HW/tau_VW_mean/vehicle.L + (RAMP_STEER_R.rear_slip_angle-RAMP_STEER_R.front_slip_angle)/vehicle.L;
 figure
 scatter(smooth(RAMP_STEER_L.ayG,800),smooth(rho_RSL,800),'DisplayName','rho(ay) RSL')
 xlabel('ayG');ylabel('rho');
@@ -191,8 +191,8 @@ K_rho_ay_RSL = rho_ay_RSL.p1
 K_rho_ay_RSR = rho_ay_RSR.p1
 
 
-rho_CW = SP_100FT_CR_IS_CW.delta_HW/tau_VW_mean + SP_100FT_CR_IS_CW.rear_slip_angle-SP_100FT_CR_IS_CW.front_slip_angle;
-rho_CCW = SP_100FT_CR_IS_CCW.delta_HW/tau_VW_mean + SP_100FT_CR_IS_CCW.rear_slip_angle-SP_100FT_CR_IS_CCW.front_slip_angle;
+rho_CW = (SP_100FT_CR_IS_CW.delta_HW/tau_VW_mean)/vehicle.L + (SP_100FT_CR_IS_CW.rear_slip_angle-SP_100FT_CR_IS_CW.front_slip_angle)/vehicle.L;
+rho_CCW = (SP_100FT_CR_IS_CCW.delta_HW/tau_VW_mean)/vehicle.L + (SP_100FT_CR_IS_CCW.rear_slip_angle-SP_100FT_CR_IS_CCW.front_slip_angle)/vehicle.L;
 
 figure
 scatter(smooth(SP_100FT_CR_IS_CW.delta_HW,800),smooth(rho_CW,800),'DisplayName','rho(delta) CW')
