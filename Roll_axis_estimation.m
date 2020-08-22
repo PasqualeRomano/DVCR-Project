@@ -163,5 +163,6 @@ plot(RAMP_STEER_L.time,smooth(DeltaZF_RSL,500),'DisplayName','DeltaZF_RSL')
 xlabel('time (s)');ylabel('N');
 title('RAMP_STEER_L');
 legend
-
+hG = h_roll+vehicle.h_Gs;
 save('roll_height','h_roll');
+save('CoM','hG');
