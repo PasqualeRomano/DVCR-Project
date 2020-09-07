@@ -43,6 +43,12 @@ clear
 close all
 clc
 
+
+
+
+
+
+
 % Set LaTeX as default interpreter for axis labels, ticks and legends
 set(0,'defaulttextinterpreter','latex')
 set(groot, 'defaultAxesTickLabelInterpreter','latex');
@@ -69,9 +75,27 @@ fprintf(strcat('Loading vehicle data \n'))
 % Tyre data are contained in loadPacejkaParam.m
 % Be careful if you want to change tyre data.
 
+
+
+
+
 vehicle_data   = getVehicleDataStruct();
 auxiliary_data = getAuxiliaryDataStruct();
 
+Tb_init     = 0;
+lambda_init = 0;
+
+lambda_min = -0.08;
+lambda_max = -0.055;
+Fb_min = -2350;
+Fb_max = -1850;
+
+Tb_min = Fb_min*vehicle_data.rear_wheel.Rr;
+Tb_max = Fb_max*vehicle_data.rear_wheel.Rr;
+
+%k = 5e3; % [Nm/s]
+
+disp('Initialised!')
 %% Select Maneuvre
 % In this section you can select one of the three maneuvers on which you
 % are supposed to test the performances of your controllers:
@@ -95,7 +119,7 @@ init_conditions_data = getInitialConditionsDataStruct( V_init );
 % Hydraulic Actuated Brakes (HAB), characterized by discrete dynamics.
 
 % % % % % % % % % % % % % % % %
-brake_maneuver_flag = false;  % <------- Put this flag equal to true to select full brake maneuver 
+brake_maneuver_flag = true;  % <------- Put this flag equal to true to select full brake maneuver 
 % % % % % % % % % % % % % % % %
 
 % Simulation lasts t_f = 10s;
@@ -167,7 +191,7 @@ end
 % 
 
 % % % % % % % % % % % % % % % % % % % % % %
-SteadyStateCorner_flag = true; % <------- Put this flag equal to true to select constant cornering and brake maneuver 
+SteadyStateCorner_flag = false; % <------- Put this flag equal to true to select constant cornering and brake maneuver 
 % % % % % % % % % % % % % % % % % % % % % %
 
 % Simulation lasts t_f = 10s;
